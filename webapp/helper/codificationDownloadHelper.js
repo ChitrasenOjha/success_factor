@@ -1,7 +1,7 @@
 sap.ui.define([], function () {
     "use strict";
     return {
-        downloadExcelData: async function (aData,that)
+        downloadExcelData: async function (aData,that,selectedTempalteValue)
         {
             try
             {
@@ -12,7 +12,15 @@ sap.ui.define([], function () {
                     sap.ui.core.BusyIndicator.hide();
                     return;
                 }
-                const sUrl = sap.ui.require.toUrl("employeedatamaster/assets/Employee_Data_Compensation_Template.xlsx");
+                var sUrl="";
+                if(selectedTempalteValue === "EmployeeData")
+                {
+                    sUrl = sap.ui.require.toUrl("employeedatamaster/assets/Employee_Data_Master.xlsx");
+                }
+                else
+                {
+                    sUrl = sap.ui.require.toUrl("employeedatamaster/assets/Employee_Data_Compensation_Template.xlsx");
+                }
                 const response = await fetch(sUrl);
                 const arrayBuffer = await response.arrayBuffer();
                 const workbook = XLSX.read(arrayBuffer, { type: "array" , cellStyles: true });

@@ -462,7 +462,7 @@ sap.ui.define([
                     case "EmployeeData":
                         return [109, 106];
                     case "CsfData":
-                        return [66];
+                        return [66, 44];
                     case "CompData":
                         return [9];
                     default:
@@ -790,7 +790,8 @@ sap.ui.define([
                     success: function (oErrorResponse) {
                         oView.setBusy(false);
                         var jobStatus = oErrorResponse.results[0].job_status;
-                        if (jobStatus === "Job is still in progress. Please check later.")
+                        //if (jobStatus === "Job is still in progress. Please check later.")
+                        if (jobStatus === "Job is still in progress. Please check in a moment." || jobStatus === "Job is still in progress. Please check later.") 
                         {
                             MessageBox.warning("Validation is still in progress.", {
                                 title: "Job status",
@@ -981,7 +982,7 @@ sap.ui.define([
             },
             onDownloadCodifiedData: function ()
             {
-                codificationDownloadHelper.downloadExcelData(this.output, this);
+                codificationDownloadHelper.downloadExcelData(this.output, this, this.selectedFileTemplate);
             },
             downloadCodificationErrors: function ()
             {
