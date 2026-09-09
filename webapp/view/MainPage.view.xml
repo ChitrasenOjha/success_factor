@@ -25,16 +25,22 @@
                 columnsL="1"
                 columnsM="1"
                 width="600px">
+
+                <Label id="_IDGenLabel4" text="Country" />
+                <ComboBox id="countrySelect" selectedKey="{countryModel>/Country}" items="{ path: 'countryModel>/Countries'}" placeholder="Select Country" change=".onCountrySelect">
+                    <core:Item id="_IDGenItem1" key="{countryModel>countryId}" text="{countryModel>countryName}" />
+                </ComboBox>
+                
                 <Label id="_IDGenLabel" text="Template" />
                 <RadioButtonGroup id="rbFileType" columns="1" selectedIndex="" select="onTemplateSelection">
                     <buttons>
                         <RadioButton id="EmployeeData" text="Employee Data Master" />
                         <RadioButton id="CsfData" text="Employee Country Specific Fields(CSF) Data" />
-                        <RadioButton id="CompData" text="Employee Data Compensation" />
+                        <RadioButton id="CompData" text="Employee Data Compensation" enabled="false"/>
                     </buttons>
                 </RadioButtonGroup>
 
-                <Label id="_IDGenLabel1" text="Employee Count" />
+                <Label id="_IDGenLabel1" text="Record Count" />
                 <Input id="employeeCount" placeholder="No.of Employees" type="Number" liveChange="onEmployeeCountChange" />
 
                 <Label id="_IDGenLabel2" text="Cut-off Date" />
@@ -44,6 +50,29 @@
                     displayFormat="dd-MM-yyyy" 
                     valueFormat="dd-MM-yyyy" 
                     change="onDateSelection" />
+
+                    <Label id="_IDGenLabelNew" text="Legal Entity" />
+
+                    <!-- Commented Legal Box Dropdown as per new requirement changes
+                    <ComboBox
+                        id="legalDropdown"
+                        width="100%"
+                        placeholder="Select from the list"
+                        enabled="false"
+                        showSecondaryValues="true"
+                        filterSecondaryValues="true"
+                        items="{
+                            path: 'businessUnitModel>/items'
+                        }"> 
+
+                        <core:Item
+                            id="_IDGenItem1"
+                            key="{businessUnitModel>BusinessUnit}"
+                            text="{businessUnitModel>BusinessUnit}" />
+
+                    </ComboBox>
+
+                    -->
 
                 <Label id="_IDGenLabel3" text="Upload File" />
                 <u:FileUploader

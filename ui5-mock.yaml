@@ -49,3 +49,8 @@ server:
             mockdataPath: ./webapp/localService/employeeCompData/data
             generateMockData: true
         annotations: []
+builder:
+  resources:
+    excludes:
+      - /test/**
+      - /localService/**

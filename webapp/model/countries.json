@@ -1,5 +1,13 @@
-[
-  { "countryId": "IN", "countryName": "India" },
-  { "countryId": "UAE", "countryName": "UAE" },
-  { "countryId": "SL", "countryName" : "Sri Lanka"}
-]
+{
+  "Country": "",
+  "Countries":
+  [
+    {"countryId":"India","countryName":"India"},
+    { "countryId": "Argentina", "countryName": "Argentina" },
+    { "countryId": "Brazil", "countryName": "Brazil" },
+    { "countryId": "Mexico", "countryName" : "Mexico"},
+    { "countryId": "Sri Lanka", "countryName" : "Sri Lanka"},
+    { "countryId": "UAE", "countryName" : "UAE"},
+    { "countryId": "USA", "countryName" : "USA"}
+  ]
+}

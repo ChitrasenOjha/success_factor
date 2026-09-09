@@ -81,6 +81,10 @@
           "bundleName": "employeedatamaster.i18n.i18n"
         }
       },
+      "countryModel": {
+        "type": "sap.ui.model.json.JSONModel",
+        "uri": "model/countries.json"
+      },
       "": {
         "dataSource": "mainService",
         "preload": true,

@@ -64,6 +64,7 @@
             <EntityType Name="zemp_header" sap:content-version="1">
                 <Key>
                     <PropertyRef Name="RuleFieldID"/>
+                    <PropertyRef Name="BusinessUnit"/>
                 </Key>
                 <Property Name="RuleFieldID" Type="Edm.String" Nullable="false" MaxLength="200" sap:unicode="false" sap:label="Text (200 char)" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="TemplateId" Type="Edm.String" Nullable="false" sap:unicode="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
@@ -72,6 +73,7 @@
                 <Property Name="CutoffDate" Type="Edm.String" Nullable="false" sap:unicode="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="Flag" Type="Edm.String" Nullable="false" sap:unicode="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="Status" Type="Edm.String" Nullable="false" sap:unicode="false" sap:creatable="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+                <Property Name="BusinessUnit" Type="Edm.String" Nullable="false" MaxLength="100" sap:unicode="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <NavigationProperty Name="TO_ITEMS" Relationship="ZR_VALIDATION_SF_COMP_SRV.ass_emp_header_item" FromRole="FromRole_ass_emp_header_item" ToRole="ToRole_ass_emp_header_item"/>
             </EntityType>
             <EntityType Name="zemp_drop" sap:content-version="1">
@@ -102,6 +104,12 @@
                 <Property Name="LEGACY_CODE" Type="Edm.String" Nullable="false" sap:unicode="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
                 <Property Name="job_status" Type="Edm.String" Nullable="false" sap:unicode="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
             </EntityType>
+            <EntityType Name="ZBusinessUnitVH" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="BusinessUnit"/>
+                </Key>
+                <Property Name="BusinessUnit" Type="Edm.String" Nullable="false" MaxLength="100" sap:unicode="false" sap:updatable="false" sap:sortable="false" sap:filterable="false"/>
+            </EntityType>
             <Association Name="ass_emp_header_item" sap:content-version="1">
                 <End Type="ZR_VALIDATION_SF_COMP_SRV.zemp_header" Multiplicity="1" Role="FromRole_ass_emp_header_item"/>
                 <End Type="ZR_VALIDATION_SF_COMP_SRV.zemp_item" Multiplicity="*" Role="ToRole_ass_emp_header_item"/>
@@ -123,6 +131,7 @@
                 <EntitySet Name="zemp_dropSet" EntityType="ZR_VALIDATION_SF_COMP_SRV.zemp_drop" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:addressable="false" sap:content-version="1"/>
                 <EntitySet Name="ZExcelErrorLogSet" EntityType="ZR_VALIDATION_SF_COMP_SRV.ZExcelErrorLog" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:addressable="false" sap:content-version="1"/>
                 <EntitySet Name="zexcel_errorSet" EntityType="ZR_VALIDATION_SF_COMP_SRV.zexcel_error" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:addressable="false" sap:content-version="1"/>
+                <EntitySet Name="ZBusinessUnitVHSet" EntityType="ZR_VALIDATION_SF_COMP_SRV.ZBusinessUnitVH" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:pageable="false" sap:addressable="false" sap:content-version="1"/>
                 <AssociationSet Name="ass_emp_header_itemSet" Association="ZR_VALIDATION_SF_COMP_SRV.ass_emp_header_item" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1">
                     <End EntitySet="zemp_headerSet" Role="FromRole_ass_emp_header_item"/>
                     <End EntitySet="zemp_itemSet" Role="ToRole_ass_emp_header_item"/>

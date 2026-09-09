@@ -8,10 +8,11 @@ sap.ui.define([
     "employeedatamaster/helper/codificationDownloadHelper",
     "employeedatamaster/helper/dialogBoxForCSFHelper",
     "employeedatamaster/helper/codificationErrorsDownloadHelper",
-    "employeedatamaster/helper/dialogBoxCodificationErrorsHelper"
+    "employeedatamaster/helper/dialogBoxCodificationErrorsHelper",
+    "employeedatamaster/helper/businessUnitHelper"
 ],
     function (Controller, JSONModel, xlsx, MessageBox, MessageToast, dialogBox, codificationDownloadHelper, dialogBoxForCSFHelper,
-        codificationErrorsDownloadHelper, dialogBoxCodificationErrorsHelper) {
+        codificationErrorsDownloadHelper, dialogBoxCodificationErrorsHelper, businessUnitHelper) {
         "use strict";
         var processingFile;
         var username;
@@ -22,9 +23,12 @@ sap.ui.define([
         return Controller.extend("employeedatamaster.controller.MainPage", {
             onInit: function () {
                 isTemplateValid = true;
+                /*
+                console.log(this.getOwnerComponent().getModel("countryModel"));
                 console.log(this.getOwnerComponent().getModel());
                 console.log(this.getOwnerComponent().getModel("csfModel"));
                 console.log(this.getOwnerComponent().getModel("compModel"));
+                */
 
                 //CSRF Token logic
                 this._csrfToken = null;
@@ -49,12 +53,38 @@ sap.ui.define([
                 var sSelectedId = oGroup.getButtons()[iIndex].getId().split("--")[2];
                 processingFile = sSelectedId;
                 this.selectedFileTemplate = sSelectedId;
+                // ADDED THIS BLOCK - Dropdown
+                //var oDropdown = this.byId("legalDropdown");
+                // if (
+                //     this.selectedFileTemplate === "EmployeeData" ||
+                //     this.selectedFileTemplate === "CsfData"
+                // ) {
+                //     oDropdown.setEnabled(false);
+                //     oDropdown.setSelectedKey("");
+                // } else if (this.selectedFileTemplate === "CompData") {
+                //     oDropdown.setEnabled(true);
+                //     this.loadBusinessUnits();
+                // }
                 this.resetFileSelection();
                 this.checkEnableValidateButton();
                 this.byId("_IDGenButton3").setVisible(true);
                 this.byId("_IDGenButton3").setEnabled(false);
             },
 
+            onCountrySelect:function(oEvent)
+            {
+                var oSelectedCountry = oEvent.getParameter("selectedItem");
+                if(!oSelectedCountry)
+                {
+                    return
+                }
+                if(oSelectedCountry)
+                {
+                    var sSelectedCountryId = oSelectedCountry.getKey();
+                    var sSelectedCountryName = oSelectedCountry.getKey();
+                }
+                this.countryValue=sSelectedCountryName;
+            },
             onEmployeeCountChange: function (oEvent) {
                 var oInput = oEvent.getSource();
                 var sValue = oInput.getValue();
@@ -84,7 +114,27 @@ sap.ui.define([
                 this.selectedDate = oDateValue;
                 this.checkEnableValidateButton();
             },
-
+            
+            // ADDED THIS FUNCTION - To Load Business Units in Dropdown
+            // Start of the function
+            loadBusinessUnits: function () {
+                var that = this;
+                businessUnitHelper.getBusinessUnits(this)
+                    .then(function (aData) {
+                        var oBusinessModel = new JSONModel();
+                        oBusinessModel.setData({
+                            items: aData
+                        });
+                        that.getView().setModel(oBusinessModel, "businessUnitModel");
+                        console.log(aData);
+                    })
+                    .catch(function (oError) {
+                        console.log(oError);
+                        MessageToast.show("Failed to load Business Units");
+                    });
+            },
+            // End of the function
+            //Test - 1231212
             //Not Triggering at any moment.!
             //We can remove if needed.
             onFileChange: function (oEvent) {
@@ -97,10 +147,8 @@ sap.ui.define([
             },
 
             //--------------------------ACTUAL VALIDATION lOGIC----------------------------------
-            getODataModelForTemplate: function ()
-            {
-                switch (this.selectedFileTemplate)
-                {
+            getODataModelForTemplate: function () {
+                switch (this.selectedFileTemplate) {
                     case "EmployeeData":
                         console.log("Using MAIN service");
                         return this.getOwnerComponent().getModel();
@@ -116,30 +164,24 @@ sap.ui.define([
                 }
             },
 
-            getEntitySetForTemplate: function ()
-            {
+            getEntitySetForTemplate: function () {
                 return "/zemp_headerSet";
             },
 
-            isRowEmpty: function (row)
-            {
-                return row.every(function (cell) 
-                {
+            isRowEmpty: function (row) {
+                return row.every(function (cell) {
                     return cell === null || cell === undefined || String(cell).trim() === "";
                 });
             },
 
-            buildItemPayloadByTemplate: function (row)
-            {
-                if (!row || this.isRowEmpty(row))
-                {
+            buildItemPayloadByTemplate: function (row) {
+                if (!row || this.isRowEmpty(row)) {
                     return null;
                 }
                 switch (this.selectedFileTemplate) {
                     /* ================= EMPLOYEE DATA MASTER ================= */
                     case "EmployeeData":
-                        if (this._employeeMasterColumnCount === 109)
-                        {
+                        if (this._employeeMasterColumnCount === 118) {
                             return {
                                 RuleFieldID: row[0]?.toString() || "",
                                 Ha001: row[1]?.toString() || "",
@@ -152,109 +194,118 @@ sap.ui.define([
                                 Ei007: row[8]?.toString() || "",
                                 Ei004: row[9]?.toString() || "",
                                 Ei003: row[10]?.toString() || "",
-                                Jh001: row[11]?.toString() || "",
-                                Jm001: row[12]?.toString() || "",
-                                Pi017: row[13]?.toString() || "",
-                                Pi001: row[14]?.toString() || "",
-                                Pi003: row[15]?.toString() || "",
-                                Pi014: row[16]?.toString() || "",
-                                Pi007: row[17]?.toString() || "",
-                                Pi006: row[18]?.toString() || "",
-                                Pi009: row[19]?.toString() || "",
-                                Pi010: row[20]?.toString() || "",
-                                Pi011: row[21]?.toString() || "",
-                                Pi002: row[22]?.toString() || "",
-                                Pi004: row[23]?.toString() || "",
-                                Pi013: row[24]?.toString() || "",
-                                Pi005: row[25]?.toString() || "",
-                                Pi019: row[26]?.toString() || "",
-                                Pi015: row[27]?.toString() || "",
-                                Pi008: row[28]?.toString() || "",
-                                Bm001: row[29]?.toString() || "",
-                                Bm004: row[30]?.toString() || "",
-                                Bm002: row[31]?.toString() || "",
-                                Bm005: row[32]?.toString() || "",
-                                Bm003: row[33]?.toString() || "",
-                                Pm001: row[34]?.toString() || "",
-                                Pm004: row[35]?.toString() || "",
-                                Pm002: row[36]?.toString() || "",
-                                Pm005: row[37]?.toString() || "",
-                                Pm003: row[38]?.toString() || "",
-                                Eb001: row[39]?.toString() || "",
-                                Eb002: row[40]?.toString() || "",
-                                Ep001: row[41]?.toString() || "",
-                                Ep002: row[42]?.toString() || "",
-                                Na001: row[43]?.toString() || "",
-                                Na002: row[44]?.toString() || "",
-                                Na003: row[45]?.toString() || "",
-                                Na004: row[46]?.toString() || "",
-                                Nb001: row[47]?.toString() || "",
-                                Nb002: row[48]?.toString() || "",
-                                Nb003: row[49]?.toString() || "",
-                                Nb004: row[50]?.toString() || "",
-                                Nc001: row[51]?.toString() || "",
-                                Nc002: row[52]?.toString() || "",
-                                Nc003: row[53]?.toString() || "",
-                                Nc004: row[54]?.toString() || "",
-                                Ec001: row[55]?.toString() || "",
-                                Ec002: row[56]?.toString() || "",
-                                Ec003: row[57]?.toString() || "",
-                                Ec004: row[58]?.toString() || "",
-                                Ec006: row[59]?.toString() || "",
-                                Ec008: row[60]?.toString() || "",
-                                Ec007: row[61]?.toString() || "",
-                                Da012: row[62]?.toString() || "",
-                                Da001: row[63]?.toString() || "",
-                                Da006: row[64]?.toString() || "",
-                                Da002: row[65]?.toString() || "",
-                                Da003: row[66]?.toString() || "",
-                                Da008: row[67]?.toString() || "",
-                                Da009: row[68]?.toString() || "",
-                                Da007: row[69]?.toString() || "",
-                                Da011: row[70]?.toString() || "",
-                                Db012: row[71]?.toString() || "",
-                                Db001: row[72]?.toString() || "",
-                                Db006: row[73]?.toString() || "",
-                                Db002: row[74]?.toString() || "",
-                                Db003: row[75]?.toString() || "",
-                                Db008: row[76]?.toString() || "",
-                                Db009: row[77]?.toString() || "",
-                                Db007: row[78]?.toString() || "",
-                                Db011: row[79]?.toString() || "",
-                                Jc032: row[80]?.toString() || "",
-                                Jc031: row[81]?.toString() || "",
-                                Jc005: row[82]?.toString() || "",
-                                Jc015: row[83]?.toString() || "",
-                                Jc025: row[84]?.toString() || "",
-                                Jc043: row[85]?.toString() || "",
-                                Jc021: row[86]?.toString() || "",
-                                Jc011: row[87]?.toString() || "",
-                                Jc035: row[88]?.toString() || "",
-                                Jc054: row[89]?.toString() || "",
-                                Jc061: row[90]?.toString() || "",
-                                Jc006: row[91]?.toString() || "",
-                                Jc012: row[92]?.toString() || "",
-                                Jc036: row[93]?.toString() || "",
-                                Jc045: row[94]?.toString() || "",
-                                Jc003: row[95]?.toString() || "",
-                                Jc008: row[96]?.toString() || "",
-                                Jc004: row[97]?.toString() || "",
-                                Jc030: row[98]?.toString() || "",
-                                Jc013: row[99]?.toString() || "",
-                                Jc029: row[100]?.toString() || "",
-                                Jc007: row[101]?.toString() || "",
-                                Jc047: row[102]?.toString() || "",
-                                Jc027: row[103]?.toString() || "",
-                                Jc019: row[104]?.toString() || "",
-                                Jc049: row[105]?.toString() || "",
-                                Jc051: row[106]?.toString() || "",
-                                Jc056: row[107]?.toString() || "",
-                                Jc044: row[108]?.toString() || ""
+                                XY001: row[11]?.toString() || "",
+                                XY002: row[12]?.toString() || "",
+                                XY70: row[13]?.toString() || "",
+                                Jh001: row[14]?.toString() || "",
+                                Jm001: row[15]?.toString() || "",
+                                Pi017: row[16]?.toString() || "",
+                                Pi001: row[17]?.toString() || "",
+                                Pi003: row[18]?.toString() || "",
+                                Pi014: row[19]?.toString() || "",
+                                Pi007: row[20]?.toString() || "",
+                                Pi006: row[21]?.toString() || "",
+                                Pi009: row[22]?.toString() || "",
+                                Pi010: row[23]?.toString() || "",
+                                Pi011: row[24]?.toString() || "",
+                                Pi002: row[25]?.toString() || "",
+                                Pi004: row[26]?.toString() || "",
+                                Pi013: row[27]?.toString() || "",
+                                Pi005: row[28]?.toString() || "",
+                                Pi019: row[29]?.toString() || "",
+                                Pi015: row[30]?.toString() || "",
+                                Pi008: row[31]?.toString() || "",
+                                Bm001: row[32]?.toString() || "",
+                                Bm004: row[33]?.toString() || "",
+                                Bm002: row[34]?.toString() || "",
+                                Bm005: row[35]?.toString() || "",
+                                Bm003: row[36]?.toString() || "",
+                                Pm001: row[37]?.toString() || "",
+                                Pm004: row[38]?.toString() || "",
+                                Pm002: row[39]?.toString() || "",
+                                Pm005: row[40]?.toString() || "",
+                                Pm003: row[41]?.toString() || "",
+                                Eb001: row[42]?.toString() || "",
+                                Eb002: row[43]?.toString() || "",
+                                Ep001: row[44]?.toString() || "",
+                                Ep002: row[45]?.toString() || "",
+                                Na001: row[46]?.toString() || "",
+                                Na002: row[47]?.toString() || "",
+                                Na003: row[48]?.toString() || "",
+                                Na004: row[49]?.toString() || "",
+                                Nb001: row[50]?.toString() || "",
+                                Nb002: row[51]?.toString() || "",
+                                Nb003: row[52]?.toString() || "",
+                                Nb004: row[53]?.toString() || "",
+                                Nc001: row[54]?.toString() || "",
+                                Nc002: row[55]?.toString() || "",
+                                Nc003: row[56]?.toString() || "",
+                                Nc004: row[57]?.toString() || "",
+                                XY003: row[58]?.toString() || "",
+                                XY004: row[59]?.toString() || "",
+                                XY005: row[60]?.toString() || "",
+                                XY006: row[61]?.toString() || "",
+                                Ec001: row[62]?.toString() || "",
+                                Ec002: row[63]?.toString() || "",
+                                Ec003: row[64]?.toString() || "",
+                                Ec004: row[65]?.toString() || "",
+                                Ec006: row[66]?.toString() || "",
+                                Ec008: row[67]?.toString() || "",
+                                Ec007: row[68]?.toString() || "",
+                                XY007: row[69]?.toString() || "",
+                                Da012: row[70]?.toString() || "",
+                                Da001: row[71]?.toString() || "",
+                                Da006: row[72]?.toString() || "",
+                                Da002: row[73]?.toString() || "",
+                                Da003: row[74]?.toString() || "",
+                                Da008: row[75]?.toString() || "",
+                                Da009: row[76]?.toString() || "",
+                                Da007: row[77]?.toString() || "",
+                                Da011: row[78]?.toString() || "",
+                                Db012: row[79]?.toString() || "",
+                                Db001: row[80]?.toString() || "",
+                                Db006: row[81]?.toString() || "",
+                                Db002: row[82]?.toString() || "",
+                                Db003: row[83]?.toString() || "",
+                                Db008: row[84]?.toString() || "",
+                                Db009: row[85]?.toString() || "",
+                                Db007: row[86]?.toString() || "",
+                                Db011: row[87]?.toString() || "",
+                                Jc032: row[88]?.toString() || "",
+                                Jc031: row[89]?.toString() || "",
+                                Jc005: row[90]?.toString() || "",
+                                Jc015: row[91]?.toString() || "",
+                                Jc025: row[92]?.toString() || "",
+                                Jc043: row[93]?.toString() || "",
+                                Jc021: row[94]?.toString() || "",
+                                Jc011: row[95]?.toString() || "",
+                                Jc035: row[96]?.toString() || "",
+                                Jc054: row[97]?.toString() || "",
+                                Jc061: row[98]?.toString() || "",
+                                Jc006: row[99]?.toString() || "",
+                                Jc012: row[100]?.toString() || "",
+                                Jc036: row[101]?.toString() || "",
+                                Jc045: row[102]?.toString() || "",
+                                Jc003: row[103]?.toString() || "",
+                                Jc008: row[104]?.toString() || "",
+                                Jc004: row[105]?.toString() || "",
+                                Jc030: row[106]?.toString() || "",
+                                Jc013: row[107]?.toString() || "",
+                                Jc029: row[108]?.toString() || "",
+                                Jc007: row[109]?.toString() || "",
+                                Jc047: row[110]?.toString() || "",
+                                Jc027: row[111]?.toString() || "",
+                                Jc019: row[112]?.toString() || "",
+                                Jc049: row[113]?.toString() || "",
+                                XY008: row[114]?.toString() || "",
+                                Jc051: row[115]?.toString() || "",
+                                Jc056: row[116]?.toString() || "",
+                                Jc044: row[117]?.toString() || ""
+
                             };
                         }
 
-                        if (this._employeeMasterColumnCount === 106)
-                        {
+                        if (this._employeeMasterColumnCount === 107) {
                             return {
                                 RuleFieldID: row[0]?.toString() || "",
                                 Ha001: row[1]?.toString() || "",
@@ -361,7 +412,8 @@ sap.ui.define([
                                 Jc049: row[102]?.toString() || "",
                                 Jc051: row[103]?.toString() || "",
                                 Jc056: row[104]?.toString() || "",
-                                Jc044: row[105]?.toString() || ""
+                                Jc044: row[105]?.toString() || "",
+                                XY70: row[106]?.toString() || ""
 
                             };
                         }
@@ -382,58 +434,72 @@ sap.ui.define([
                             Pi010: row[11]?.toString() || "",
                             Pi011: row[12]?.toString() || "",
                             Pi012: row[13]?.toString() || "",
-                            Ad001: row[14]?.toString() || "",
-                            Ad003: row[15]?.toString() || "",
-                            Ad004: row[16]?.toString() || "",
-                            Ad005: row[17]?.toString() || "",
-                            Ad006: row[18]?.toString() || "",
-                            Ad007: row[19]?.toString() || "",
-                            Ad008: row[20]?.toString() || "",
-                            Ad009: row[21]?.toString() || "",
-                            Ad002: row[22]?.toString() || "",
-                            Ad010: row[23]?.toString() || "",
-                            Ad011: row[24]?.toString() || "",
-                            Ad012: row[25]?.toString() || "",
-                            Ad013: row[26]?.toString() || "",
-                            Ad014: row[27]?.toString() || "",
-                            Ad015: row[28]?.toString() || "",
-                            Ad016: row[29]?.toString() || "",
-                            Ji023: row[30]?.toString() || "",
-                            Ji024: row[31]?.toString() || "",
-                            Ji025: row[32]?.toString() || "",
-                            Ji026: row[33]?.toString() || "",
-                            Ji001: row[34]?.toString() || "",
-                            Ji002: row[35]?.toString() || "",
-                            Ji022: row[36]?.toString() || "",
-                            Ji003: row[37]?.toString() || "",
-                            Ji004: row[38]?.toString() || "",
-                            Ji005: row[39]?.toString() || "",
-                            Ji006: row[40]?.toString() || "",
-                            Ji007: row[41]?.toString() || "",
-                            Ji008: row[42]?.toString() || "",
-                            Ji009: row[43]?.toString() || "",
-                            Ji010: row[44]?.toString() || "",
-                            Ji011: row[45]?.toString() || "",
-                            Ji012: row[46]?.toString() || "",
-                            Ji013: row[47]?.toString() || "",
-                            Ji014: row[48]?.toString() || "",
-                            Ji015: row[49]?.toString() || "",
-                            Ji016: row[50]?.toString() || "",
-                            Ji017: row[51]?.toString() || "",
-                            Ji018: row[52]?.toString() || "",
-                            Ji019: row[53]?.toString() || "",
-                            Ji020: row[54]?.toString() || "",
-                            Ji021: row[55]?.toString() || "",
-                            Py001: row[56]?.toString() || "",
-                            Py002: row[57]?.toString() || "",
-                            Py003: row[58]?.toString() || "",
-                            Py004: row[59]?.toString() || "",
-                            Py005: row[60]?.toString() || "",
-                            Py006: row[61]?.toString() || "",
-                            Py007: row[62]?.toString() || "",
-                            Py009: row[63]?.toString() || "",
-                            Py010: row[64]?.toString() || "",
-                            Py011: row[65]?.toString() || ""
+                            XY009: row[14]?.toString() || "",
+                            XY010: row[15]?.toString() || "",
+                            XY011: row[16]?.toString() || "",
+                            XY012: row[17]?.toString() || "",
+                            XY013: row[18]?.toString() || "",
+                            XY014: row[19]?.toString() || "",
+                            XY015: row[20]?.toString() || "",
+                            XY016: row[21]?.toString() || "",
+                            Ad001: row[22]?.toString() || "",
+                            Ad003: row[23]?.toString() || "",
+                            Ad004: row[24]?.toString() || "",
+                            Ad005: row[25]?.toString() || "",
+                            Ad006: row[26]?.toString() || "",
+                            Ad007: row[27]?.toString() || "",
+                            Ad008: row[28]?.toString() || "",
+                            Ad009: row[29]?.toString() || "",
+                            Ad002: row[30]?.toString() || "",
+                            Ad010: row[31]?.toString() || "",
+                            Ad011: row[32]?.toString() || "",
+                            Ad012: row[33]?.toString() || "",
+                            Ad013: row[34]?.toString() || "",
+                            Ad014: row[35]?.toString() || "",
+                            Ad015: row[36]?.toString() || "",
+                            Ad016: row[37]?.toString() || "",
+                            XY017: row[38]?.toString() || "",
+                            Ji023: row[39]?.toString() || "",
+                            Ji024: row[40]?.toString() || "",
+                            XY018: row[41]?.toString() || "",
+                            XY019: row[42]?.toString() || "",
+                            Ji025: row[43]?.toString() || "",
+                            Ji026: row[44]?.toString() || "",
+                            Ji001: row[45]?.toString() || "",
+                            Ji002: row[46]?.toString() || "",
+                            Ji022: row[47]?.toString() || "",
+                            XY020: row[48]?.toString() || "",
+                            XY021: row[49]?.toString() || "",
+                            XY022: row[50]?.toString() || "",
+                            Ji003: row[51]?.toString() || "",
+                            Ji004: row[52]?.toString() || "",
+                            Ji005: row[53]?.toString() || "",
+                            Ji006: row[54]?.toString() || "",
+                            Ji007: row[55]?.toString() || "",
+                            Ji008: row[56]?.toString() || "",
+                            Ji009: row[57]?.toString() || "",
+                            Ji010: row[58]?.toString() || "",
+                            Ji011: row[59]?.toString() || "",
+                            Ji012: row[60]?.toString() || "",
+                            Ji013: row[61]?.toString() || "",
+                            Ji014: row[62]?.toString() || "",
+                            Ji015: row[63]?.toString() || "",
+                            Ji016: row[64]?.toString() || "",
+                            Ji017: row[65]?.toString() || "",
+                            Ji018: row[66]?.toString() || "",
+                            Ji019: row[67]?.toString() || "",
+                            Ji020: row[68]?.toString() || "",
+                            Ji021: row[69]?.toString() || "",
+                            Py001: row[70]?.toString() || "",
+                            Py002: row[71]?.toString() || "",
+                            Py003: row[72]?.toString() || "",
+                            Py004: row[73]?.toString() || "",
+                            Py005: row[74]?.toString() || "",
+                            Py006: row[75]?.toString() || "",
+                            Py007: row[76]?.toString() || "",
+                            Py009: row[77]?.toString() || "",
+                            Py010: row[78]?.toString() || "",
+                            Py011: row[79]?.toString() || ""
 
                         };
 
@@ -455,14 +521,12 @@ sap.ui.define([
                 }
             },
 
-            getExpectedColumnCountByTemplate: function ()
-            {
-                switch (this.selectedFileTemplate)
-                {
+            getExpectedColumnCountByTemplate: function () {
+                switch (this.selectedFileTemplate) {
                     case "EmployeeData":
-                        return [109, 106];
+                        return [118, 107];
                     case "CsfData":
-                        return [66, 44];
+                        return [80, 44];
                     case "CompData":
                         return [9];
                     default:
@@ -470,10 +534,8 @@ sap.ui.define([
                 }
             },
 
-            getSheetRangeByTemplate: function ()
-            {
-                switch (this.selectedFileTemplate)
-                {
+            getSheetRangeByTemplate: function () {
+                switch (this.selectedFileTemplate) {
                     case "EmployeeData":
                         return {
                             startRow: 5,
@@ -497,10 +559,8 @@ sap.ui.define([
                 }
             },
 
-            getHeaderRowIndexByTemplate: function ()
-            {
-                switch (this.selectedFileTemplate)
-                {
+            getHeaderRowIndexByTemplate: function () {
+                switch (this.selectedFileTemplate) {
                     case "EmployeeData":
                         return 9;
                     case "CsfData":
@@ -512,10 +572,8 @@ sap.ui.define([
                 }
             },
 
-            getDataStartOffsetByTemplate: function ()
-            {
-                switch (this.selectedFileTemplate)
-                {
+            getDataStartOffsetByTemplate: function () {
+                switch (this.selectedFileTemplate) {
                     case "EmployeeData":
                         return 9;
                     case "CsfData":
@@ -527,13 +585,11 @@ sap.ui.define([
                 }
             },
 
-            onFileUpload: function ()
-            {
+            onFileUpload: function () {
                 var oFileUploader = this.byId("fileUploader");
                 // var file = oFileUploader.getFocusDomRef().files[0];
                 const file = oFileUploader.getDomRef("fu")?.files?.[0];
-                if (!file)
-                {
+                if (!file) {
                     return;
                 }
                 sap.ui.core.BusyIndicator.show(0);
@@ -547,8 +603,7 @@ sap.ui.define([
                     console.log(worker);
                     worker.postMessage(arrayBuffer);
                     worker.onmessage = function (event) {
-                        if (event.data.success)
-                        {
+                        if (event.data.success) {
                             this._worksheets = event.data.worksheets;
                             var aSheets = event.data.sheets;
                             var oSheetModel = new sap.ui.model.json.JSONModel({
@@ -556,17 +611,14 @@ sap.ui.define([
                                 selectedSheet: ""
                             });
                             this.getView().setModel(oSheetModel, "sheetModel");
-                            if (aSheets.length === 1)
-                            {
+                            if (aSheets.length === 1) {
                                 this.processSelectedSheet(aSheets[0].sheetName);
                             }
-                            else
-                            {
+                            else {
                                 this.openSheetDialog();
                             }
                         }
-                        else
-                        {
+                        else {
                             sap.m.MessageToast.show("Error: " + event.data.error);
                         }
                         sap.ui.core.BusyIndicator.hide();
@@ -575,10 +627,8 @@ sap.ui.define([
                 }.bind(this);
                 reader.readAsArrayBuffer(file);
             },
-            openSheetDialog: function ()
-            {
-                if (!this.oSheetDialog)
-                {
+            openSheetDialog: function () {
+                if (!this.oSheetDialog) {
                     this.oSheetDialog = sap.ui.xmlfragment(
                         "employeedatamaster.fragments.helper",
                         this
@@ -587,27 +637,25 @@ sap.ui.define([
                 }
                 this.oSheetDialog.open();
             },
-            onSheetCancel: function ()
-            {
+            onSheetCancel: function () {
                 this.oSheetDialog.close();
                 this.resetFileSelection();
             },
 
-            onSheetConfirm: function ()
-            {
+            onSheetConfirm: function () {
                 var oModel = this.getView().getModel("sheetModel");
                 var selectedSheet = oModel.getProperty("/selectedSheet");
-                if (!selectedSheet)
-                {
+                if (!selectedSheet) {
                     sap.m.MessageToast.show("Please select a sheet!");
                     return;
                 }
                 this.oSheetDialog.close();
                 this.processSelectedSheet(selectedSheet);
             },
-            processSelectedSheet: function (selectedSheet)
-            {
+            processSelectedSheet: function (selectedSheet) {
                 var that = this;
+                TO_ITEMS = []; //Added Pre-Processing
+                uploadedCount = 0; //Added Pre-Processing
                 var workbook = this._worksheets;
                 var worksheet = workbook[selectedSheet];
                 if (!worksheet) {
@@ -675,7 +723,11 @@ sap.ui.define([
                     return;
                 }
                 var file1 = file;
-                var excelData =
+                // Adding Comp Drop down fields check
+                if (this.selectedFileTemplate === "CompData")
+                {    
+                    var sBusinessUnit = this.byId("legalDropdown").getSelectedKey();
+                    var excelData =
                 {
                     "RuleFieldID": "",
                     "TemplateId": this.selectedFileTemplate,
@@ -684,7 +736,24 @@ sap.ui.define([
                     "CutoffDate": this.selectedDate?.toString() || "",
                     "Flag": "A",
                     "Status": "",
+                    "BusinessUnit": sBusinessUnit,
                     "TO_ITEMS": TO_ITEMS
+                }
+                }
+                else
+                {
+                    var excelData =
+                {
+                    "RuleFieldID": "",
+                    "TemplateId": this.selectedFileTemplate,
+                    "FileName": file1.name?.toString() || "",
+                    "NoOfEmps": this.employeeCount?.toString() || "",
+                    "CutoffDate": this.selectedDate?.toString() || "",
+                    "Flag": "A",
+                    "Status": "",
+                    "Country": this.getOwnerComponent().getModel("countryModel").getProperty("/Country") || "",
+                    "TO_ITEMS": TO_ITEMS
+                }
                 }
                 //console.log(excelData);
                 oFileUploader.addHeaderParameter(new sap.ui.unified.FileUploaderParameter({
@@ -729,8 +798,7 @@ sap.ui.define([
                                 MessageBox.error("A job is already in progress!.Please wait");
                                 that.byId("_IDGenButton3").setEnabled(false);
                             }
-                            else
-                            {
+                            else {
                                 MessageBox.success(oResponse.Status, {
                                     title: "Status",
                                     actions: [MessageBox.Action.OK, MessageBox.Action.CLOSE],
@@ -750,8 +818,7 @@ sap.ui.define([
                         isTemplateValid = false;
                         that.checkEnableValidateButton();
                     },
-                    error: function (oError)
-                    {
+                    error: function (oError) {
                         sap.ui.core.BusyIndicator.hide();
                         MessageBox.error("Upload failed: " + oError.message);
                         var oFU = that.byId("fileUploader");
@@ -765,11 +832,9 @@ sap.ui.define([
                 });
             },
 
-            onPressOfErrorSet: function ()
-            {
+            onPressOfErrorSet: function () {
                 var oModel = this.getODataModelForTemplate();
-                if (!oModel)
-                {
+                if (!oModel) {
                     return;
                 }
                 var that = this;
@@ -791,8 +856,7 @@ sap.ui.define([
                         oView.setBusy(false);
                         var jobStatus = oErrorResponse.results[0].job_status;
                         //if (jobStatus === "Job is still in progress. Please check later.")
-                        if (jobStatus === "Job is still in progress. Please check in a moment." || jobStatus === "Job is still in progress. Please check later.") 
-                        {
+                        if (jobStatus === "Job is still in progress. Please check in a moment." || jobStatus === "Job is still in progress. Please check later.") {
                             MessageBox.warning("Validation is still in progress.", {
                                 title: "Job status",
                                 details: "The file is large and validation is currently running in the background. Please wait a moment and try again.",
@@ -800,8 +864,7 @@ sap.ui.define([
                             });
                             that._lastStatus = "RUNNING";
                         }
-                        else if(jobStatus === 'Job was cancelled.')
-                        {
+                        else if (jobStatus === 'Job was cancelled.') {
                             MessageBox.error("Job has been cancelled.Please try again!", {
                                 title: "Job status",
                                 details: "The background job was cancelled due to issues in the file data. Please verify the file and try again.",
@@ -809,40 +872,33 @@ sap.ui.define([
                             });
                             return;
                         }
-                        else
-                        {
+                        else {
                             var errorLog = oErrorResponse.results || [];
                             oView.setBusy(false);
                             if (errorLog[0].ErrorLog === "No errors found in the uploaded file") {
-                                if (that.selectedFileTemplate === "EmployeeData" || that.selectedFileTemplate === "CompData")
-                                {
+                                if (that.selectedFileTemplate === "EmployeeData" || that.selectedFileTemplate === "CompData") {
                                     dialogBox.showProcessDialog(that);
                                 }
-                                else if (that.selectedFileTemplate === "CsfData")
-                                {
+                                else if (that.selectedFileTemplate === "CsfData") {
                                     dialogBoxForCSFHelper.showProcessDialogForCSF(that);
                                 }
-                                else
-                                {
+                                else {
                                     spa.m.MessageToast.show("Aborted");
                                 }
                             }
-                            else
-                            {
+                            else {
                                 that.onDownloadValidatedExcelOfERRORSET(errorLog);
                                 that.byId("_IDGenButton3").setVisible(true);
                             }
                         }
                     },
-                    error: function (oError)
-                    {
+                    error: function (oError) {
                         MessageBox.error("Failed to fetch Error Log");
                         //  that.onDownloadValidatedExcel(dataItems, []);
                     }
                 });
             },
-            onDownloadValidatedExcelOfERRORSET: function (oResponseErrors)
-            {
+            onDownloadValidatedExcelOfERRORSET: function (oResponseErrors) {
                 var errorData = [];
                 if (oResponseErrors && oResponseErrors.length) {
                     errorData = oResponseErrors.map(function (item) {
@@ -944,12 +1000,10 @@ sap.ui.define([
                         var that1 = that;
                         var CodifiedErrors = codifiedErr.results;
                         that.CodifiedErrors = CodifiedErrors;
-                        if (CodifiedErrors[0].ErrorLog === "No errors found in the uploaded file")
-                            {
-                                that.byId("_IDGenButton8").setVisible(true);
-                                oModel.read("/zemp_codfSet", {
-                                success: function (oCodifiedData)
-                                {
+                        if (CodifiedErrors[0].ErrorLog === "No errors found in the uploaded file") {
+                            that.byId("_IDGenButton8").setVisible(true);
+                            oModel.read("/zemp_codfSet", {
+                                success: function (oCodifiedData) {
                                     console.log("inside the success");
                                     that1.busyDialog.close();
                                     MessageToast.show("Codification is done.You can download the results!");
@@ -957,15 +1011,13 @@ sap.ui.define([
                                     that1.output = res;
 
                                 },
-                                error: function (oError)
-                                {
+                                error: function (oError) {
                                     that1.busyDialog.close();
                                     MessageBox.error("Failed Codification");
                                 }
                             });
                         }
-                        else
-                        {
+                        else {
                             that.busyDialog.close();
                             console.log("Inside ELSE block");
                             console.log(that);
@@ -973,19 +1025,16 @@ sap.ui.define([
                             that.byId("_IDGenButton8").setVisible(false);
                         }
                     },
-                    error: function (oError)
-                    {
+                    error: function (oError) {
                         that.busyDialog.close();
                         sap.m.MessageToast.show("Failed to Fetch the log!")
                     }
                 });
             },
-            onDownloadCodifiedData: function ()
-            {
+            onDownloadCodifiedData: function () {
                 codificationDownloadHelper.downloadExcelData(this.output, this, this.selectedFileTemplate);
             },
-            downloadCodificationErrors: function ()
-            {
+            downloadCodificationErrors: function () {
                 codificationErrorsDownloadHelper.downloadExcelErrors(this.CodifiedErrors, this);
             }
         });
