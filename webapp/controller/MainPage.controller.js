@@ -9,10 +9,11 @@ sap.ui.define([
     "employeedatamaster/helper/dialogBoxForCSFHelper",
     "employeedatamaster/helper/codificationErrorsDownloadHelper",
     "employeedatamaster/helper/dialogBoxCodificationErrorsHelper",
-    "employeedatamaster/helper/businessUnitHelper"
+    "employeedatamaster/helper/businessUnitHelper",
+    "employeedatamaster/helper/csf/csfTemplateManager"
 ],
     function (Controller, JSONModel, xlsx, MessageBox, MessageToast, dialogBox, codificationDownloadHelper, dialogBoxForCSFHelper,
-        codificationErrorsDownloadHelper, dialogBoxCodificationErrorsHelper, businessUnitHelper) {
+        codificationErrorsDownloadHelper, dialogBoxCodificationErrorsHelper, businessUnitHelper, csfTemplateManager) {
         "use strict";
         var processingFile;
         var username;
@@ -74,17 +75,17 @@ sap.ui.define([
             onCountrySelect:function(oEvent)
             {
                 var oSelectedCountry = oEvent.getParameter("selectedItem");
-                if(!oSelectedCountry)
-                {
-                    return
-                }
-                if(oSelectedCountry)
-                {
-                    var sSelectedCountryId = oSelectedCountry.getKey();
-                    var sSelectedCountryName = oSelectedCountry.getKey();
+                var sSelectedCountryName = oSelectedCountry ? oSelectedCountry.getKey() : oEvent.getSource().getSelectedKey();
+                if (!sSelectedCountryName) {
+                    return;
                 }
                 this.countryValue=sSelectedCountryName;
+                this.getOwnerComponent().getModel("countryModel").setProperty("/Country", sSelectedCountryName);
             },
+            getSelectedCountry: function () {
+                return this.countryValue || this.getOwnerComponent().getModel("countryModel").getProperty("/Country") || "";
+            },
+
             onEmployeeCountChange: function (oEvent) {
                 var oInput = oEvent.getSource();
                 var sValue = oInput.getValue();
@@ -419,89 +420,12 @@ sap.ui.define([
                         }
                     /* ================= CSF ================= */
                     case "CsfData":
-                        return {
-                            RuleFieldID: row[0]?.toString() || "",
-                            Ha001: row[1]?.toString() || "",
-                            Pi001: row[2]?.toString() || "",
-                            Pi002: row[3]?.toString() || "",
-                            Pi003: row[4]?.toString() || "",
-                            Pi004: row[5]?.toString() || "",
-                            Pi005: row[6]?.toString() || "",
-                            Pi006: row[7]?.toString() || "",
-                            Pi007: row[8]?.toString() || "",
-                            Pi008: row[9]?.toString() || "",
-                            Pi009: row[10]?.toString() || "",
-                            Pi010: row[11]?.toString() || "",
-                            Pi011: row[12]?.toString() || "",
-                            Pi012: row[13]?.toString() || "",
-                            XY009: row[14]?.toString() || "",
-                            XY010: row[15]?.toString() || "",
-                            XY011: row[16]?.toString() || "",
-                            XY012: row[17]?.toString() || "",
-                            XY013: row[18]?.toString() || "",
-                            XY014: row[19]?.toString() || "",
-                            XY015: row[20]?.toString() || "",
-                            XY016: row[21]?.toString() || "",
-                            Ad001: row[22]?.toString() || "",
-                            Ad003: row[23]?.toString() || "",
-                            Ad004: row[24]?.toString() || "",
-                            Ad005: row[25]?.toString() || "",
-                            Ad006: row[26]?.toString() || "",
-                            Ad007: row[27]?.toString() || "",
-                            Ad008: row[28]?.toString() || "",
-                            Ad009: row[29]?.toString() || "",
-                            Ad002: row[30]?.toString() || "",
-                            Ad010: row[31]?.toString() || "",
-                            Ad011: row[32]?.toString() || "",
-                            Ad012: row[33]?.toString() || "",
-                            Ad013: row[34]?.toString() || "",
-                            Ad014: row[35]?.toString() || "",
-                            Ad015: row[36]?.toString() || "",
-                            Ad016: row[37]?.toString() || "",
-                            XY017: row[38]?.toString() || "",
-                            Ji023: row[39]?.toString() || "",
-                            Ji024: row[40]?.toString() || "",
-                            XY018: row[41]?.toString() || "",
-                            XY019: row[42]?.toString() || "",
-                            Ji025: row[43]?.toString() || "",
-                            Ji026: row[44]?.toString() || "",
-                            Ji001: row[45]?.toString() || "",
-                            Ji002: row[46]?.toString() || "",
-                            Ji022: row[47]?.toString() || "",
-                            XY020: row[48]?.toString() || "",
-                            XY021: row[49]?.toString() || "",
-                            XY022: row[50]?.toString() || "",
-                            Ji003: row[51]?.toString() || "",
-                            Ji004: row[52]?.toString() || "",
-                            Ji005: row[53]?.toString() || "",
-                            Ji006: row[54]?.toString() || "",
-                            Ji007: row[55]?.toString() || "",
-                            Ji008: row[56]?.toString() || "",
-                            Ji009: row[57]?.toString() || "",
-                            Ji010: row[58]?.toString() || "",
-                            Ji011: row[59]?.toString() || "",
-                            Ji012: row[60]?.toString() || "",
-                            Ji013: row[61]?.toString() || "",
-                            Ji014: row[62]?.toString() || "",
-                            Ji015: row[63]?.toString() || "",
-                            Ji016: row[64]?.toString() || "",
-                            Ji017: row[65]?.toString() || "",
-                            Ji018: row[66]?.toString() || "",
-                            Ji019: row[67]?.toString() || "",
-                            Ji020: row[68]?.toString() || "",
-                            Ji021: row[69]?.toString() || "",
-                            Py001: row[70]?.toString() || "",
-                            Py002: row[71]?.toString() || "",
-                            Py003: row[72]?.toString() || "",
-                            Py004: row[73]?.toString() || "",
-                            Py005: row[74]?.toString() || "",
-                            Py006: row[75]?.toString() || "",
-                            Py007: row[76]?.toString() || "",
-                            Py009: row[77]?.toString() || "",
-                            Py010: row[78]?.toString() || "",
-                            Py011: row[79]?.toString() || ""
-
-                        };
+                        var oCsfTemplate = csfTemplateManager.getTemplate(this.getSelectedCountry());
+                        if (!oCsfTemplate) {
+                            MessageToast.show("CSF template is not configured for " + (this.getSelectedCountry() || "the selected country") + ".");
+                            return null;
+                        }
+                        return oCsfTemplate.buildPayload(row);
 
                     /* ================= COMPENSATION ================= */
                     case "CompData":
@@ -526,7 +450,8 @@ sap.ui.define([
                     case "EmployeeData":
                         return [118, 107];
                     case "CsfData":
-                        return [80, 44];
+                        var oCsfTemplate = csfTemplateManager.getTemplate(this.getSelectedCountry());
+                        return oCsfTemplate ? oCsfTemplate.expectedColumnCount : null;
                     case "CompData":
                         return [9];
                     default:
@@ -542,10 +467,8 @@ sap.ui.define([
                             startCol: 0
                         };
                     case "CsfData":
-                        return {
-                            startRow: 6,
-                            startCol: 0
-                        };
+                        var oCsfTemplate = csfTemplateManager.getTemplate(this.getSelectedCountry());
+                        return oCsfTemplate ? oCsfTemplate.sheetRange : null;
                     case "CompData":
                         return {
                             startRow: 6,
@@ -564,7 +487,8 @@ sap.ui.define([
                     case "EmployeeData":
                         return 9;
                     case "CsfData":
-                        return 8;
+                        var oCsfTemplate = csfTemplateManager.getTemplate(this.getSelectedCountry());
+                        return oCsfTemplate ? oCsfTemplate.headerRowIndex : 0;
                     case "CompData":
                         return 8;
                     default:
@@ -577,7 +501,8 @@ sap.ui.define([
                     case "EmployeeData":
                         return 9;
                     case "CsfData":
-                        return 9;
+                        var oCsfTemplate = csfTemplateManager.getTemplate(this.getSelectedCountry());
+                        return oCsfTemplate ? oCsfTemplate.dataStartOffset : 0;
                     case "CompData":
                         return 9;
                     default:
@@ -586,6 +511,10 @@ sap.ui.define([
             },
 
             onFileUpload: function () {
+                if (this.selectedFileTemplate === "CsfData" && !csfTemplateManager.getTemplate(this.getSelectedCountry())) {
+                    MessageToast.show("CSF template is not configured for " + (this.getSelectedCountry() || "the selected country") + ".");
+                    return;
+                }
                 var oFileUploader = this.byId("fileUploader");
                 // var file = oFileUploader.getFocusDomRef().files[0];
                 const file = oFileUploader.getDomRef("fu")?.files?.[0];
@@ -654,6 +583,11 @@ sap.ui.define([
             },
             processSelectedSheet: function (selectedSheet) {
                 var that = this;
+                if (this.selectedFileTemplate === "CsfData" && !csfTemplateManager.getTemplate(this.getSelectedCountry())) {
+                    MessageToast.show("CSF template is not configured for " + (this.getSelectedCountry() || "the selected country") + ".");
+                    this.resetFileSelection();
+                    return;
+                }
                 TO_ITEMS = []; //Added Pre-Processing
                 uploadedCount = 0; //Added Pre-Processing
                 var workbook = this._worksheets;
@@ -708,6 +642,10 @@ sap.ui.define([
             },
 
             onValidate: function () {
+                if (this.selectedFileTemplate === "CsfData" && !csfTemplateManager.getTemplate(this.getSelectedCountry())) {
+                    MessageToast.show("CSF template is not configured for " + (this.getSelectedCountry() || "the selected country") + ".");
+                    return;
+                }
                 var oModel = this.getODataModelForTemplate();
                 if (!oModel) {
                     return;
