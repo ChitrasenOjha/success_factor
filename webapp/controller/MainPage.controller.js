@@ -81,6 +81,20 @@ sap.ui.define([
                 }
                 this.countryValue=sSelectedCountryName;
                 this.getOwnerComponent().getModel("countryModel").setProperty("/Country", sSelectedCountryName);
+                this.updateCsfTemplateAvailability();
+            },
+
+            updateCsfTemplateAvailability: function () {
+                var bCsfEnabled = [ "Brazil", "Mexico", "USA"].indexOf(this.getSelectedCountry()) === -1;
+                var oCsfRadioButton = this.byId("CsfData");
+                oCsfRadioButton.setEnabled(bCsfEnabled);
+
+                if (!bCsfEnabled && this.selectedFileTemplate === "CsfData") {
+                    this.byId("rbFileType").setSelectedIndex(-1);
+                    this.selectedFileTemplate = null;
+                    processingFile = null;
+                    this.resetFileSelection();
+                }
             },
             getSelectedCountry: function () {
                 return this.countryValue || this.getOwnerComponent().getModel("countryModel").getProperty("/Country") || "";
@@ -166,7 +180,15 @@ sap.ui.define([
             },
 
             getEntitySetForTemplate: function () {
-                return "/zemp_headerSet";
+                var oCsfTemplate = this.selectedFileTemplate === "CsfData" &&
+                    csfTemplateManager.getTemplate(this.getSelectedCountry());
+                return (oCsfTemplate && oCsfTemplate.entitySet) || "/zemp_headerSet";
+            },
+
+            getNavigationPropertyForTemplate: function () {
+                var oCsfTemplate = this.selectedFileTemplate === "CsfData" &&
+                    csfTemplateManager.getTemplate(this.getSelectedCountry());
+                return (oCsfTemplate && oCsfTemplate.navigationProperty) || "TO_ITEMS";
             },
 
             isRowEmpty: function (row) {
@@ -689,9 +711,9 @@ sap.ui.define([
                     "CutoffDate": this.selectedDate?.toString() || "",
                     "Flag": "A",
                     "Status": "",
-                    "Country": this.getOwnerComponent().getModel("countryModel").getProperty("/Country") || "",
-                    "TO_ITEMS": TO_ITEMS
-                }
+                    "Country": this.getOwnerComponent().getModel("countryModel").getProperty("/Country") || ""
+                };
+                    excelData[this.getNavigationPropertyForTemplate()] = TO_ITEMS;
                 }
                 //console.log(excelData);
                 oFileUploader.addHeaderParameter(new sap.ui.unified.FileUploaderParameter({
@@ -727,10 +749,11 @@ sap.ui.define([
                     return;
                 }
                 this.byId("_IDGenButton3").setEnabled(true);
-                oModel.create("/zemp_headerSet", excelData, {
+                oModel.create(sEntitySet, excelData, {
                     success: function (oResponse) {
                         sap.ui.core.BusyIndicator.hide();
-                        var dataItems = oResponse.TO_ITEMS.results;
+                        var sNavigationProperty = that.getNavigationPropertyForTemplate();
+                        var dataItems = oResponse[sNavigationProperty] ? oResponse[sNavigationProperty].results : [];
                         if (that.selectedFileTemplate === "EmployeeData" || that.selectedFileTemplate === "CsfData" || that.selectedFileTemplate === "CompData") {
                             if (oResponse.Status === "A job is already in progress Please wait") {
                                 MessageBox.error("A job is already in progress!.Please wait");
